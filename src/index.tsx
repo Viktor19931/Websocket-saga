@@ -1,4 +1,3 @@
-import React from "react";
 import ReactDOM from "react-dom";
 import createSagaMiddleware from "redux-saga";
 import { createStore, applyMiddleware, compose } from "redux";

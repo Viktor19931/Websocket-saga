@@ -1,6 +1,6 @@
-import React, { FC } from "react";
+import { FC } from 'react';
 
-import Wrapper from "./Wrapper";
+import Wrapper from './Wrapper';
 
 const ProductInfo: FC = () => (
   <Wrapper>

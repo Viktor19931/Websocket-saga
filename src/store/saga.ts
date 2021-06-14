@@ -2,7 +2,7 @@ import { take, all, call } from "redux-saga/effects";
 import { getType } from "typesafe-actions";
 
 import * as api from "../api";
-import asyncEntyty from "../helpers/asyncEntyty";
+import asyncEntyty from "../helpers/asyncEntity";
 // import { ConfirmPaymentParams } from "./../api/types";
 
 import * as paymentActions from "./actions";

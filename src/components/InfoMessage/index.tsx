@@ -1,6 +1,6 @@
-import React, { FC } from "react";
+import { FC } from 'react';
 
-import { Wrapper, Description, InvoiceNumber } from "./Wrapper";
+import { Wrapper, Description, InvoiceNumber } from './Wrapper';
 
 type InfoMessageProps = {
   isError: boolean;
