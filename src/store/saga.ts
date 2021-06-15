@@ -1,41 +1,40 @@
-import { take, all, call } from "redux-saga/effects";
-import { getType } from "typesafe-actions";
+import { take, all, put, call } from 'typed-redux-saga';
+// import { getType } from 'typesafe-actions';
+import ReconnectingWebSocket from 'reconnecting-websocket';
+import { eventChannel } from 'redux-saga';
 
-import * as api from "../api";
-import asyncEntyty from "../helpers/asyncEntity";
-// import { ConfirmPaymentParams } from "./../api/types";
+import { websocketNewPayload } from './actions';
 
-import * as paymentActions from "./actions";
+function createSocketChannel(socket: ReconnectingWebSocket) {
+  return eventChannel((emitter) => {
+    socket.onopen = (evt: Event) => {
+      console.log('WebSocket opened ', evt);
+    };
 
-const fetchCardListAsync = asyncEntyty(paymentActions.getCardListAsync, () =>
-  api.getCardList()
-);
+    socket.onmessage = (evt: MessageEvent<any>) => {
+      console.log('WebSocket onmessage', evt);
+      return emitter({ payload: evt.data });
+    };
 
-const confirmPaymentAsync = asyncEntyty(
-  paymentActions.confirmPaymentAsync,
-  (params: any) => api.confirmPayment(params)
-);
-
-function* watchFetchCardList() {
-  while (true) {
-    yield take(getType(paymentActions.getCardList));
-
-    yield call(fetchCardListAsync);
-  }
+    return socket.close;
+  });
 }
 
-function* watchConfirmPayment() {
-  while (true) {
-    const {
-      payload,
-    }: ReturnType<typeof paymentActions.confirmPayment> = yield take(
-      getType(paymentActions.confirmPayment)
-    );
+function* watchSocketPings() {
+  const ws = new ReconnectingWebSocket('ws://my.site.com');
+  const socketChannel = yield* call(createSocketChannel, ws);
 
-    yield call(confirmPaymentAsync, payload);
+  while (true) {
+    try {
+      const payload = yield* take(socketChannel);
+      yield put(websocketNewPayload(payload));
+    } catch (err) {
+      console.error('socket error:', err);
+      socketChannel.close();
+    }
   }
 }
 
 export default function* rootSaga() {
-  yield all([watchFetchCardList(), watchConfirmPayment()]);
+  yield all([watchSocketPings()]);
 }
