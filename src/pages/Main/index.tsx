@@ -11,8 +11,8 @@ const Main: FC = () => {
   return (
     <div>
       <h2>Here is list from websocket</h2>
-      {list.map((item: any) => (
-        <p>{item}</p>
+      {list.map((item: any, index: number) => (
+        <p key={index}>{item}</p>
       ))}
     </div>
   );
