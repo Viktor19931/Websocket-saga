@@ -8,6 +8,9 @@ export const useDrawChart = () => {
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
+    // remove old elements on redraw
+    chartContainerRef.current.firstChild?.remove();
+
     const { clientWidth, clientHeight } = chartContainerRef.current;
 
     const chart = createChart(chartContainerRef.current, {
