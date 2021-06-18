@@ -15,7 +15,7 @@ const reducer: Reducer<ReducerData, Actions> = (
   action
 ) => {
   switch (action.type) {
-    case getType(actions.websocketNewPayload):
+    case getType(actions.websocketPayload):
       const oldBars = state.list || [];
       const newBars = [...oldBars];
       newBars.push(action.payload);

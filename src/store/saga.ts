@@ -2,16 +2,17 @@ import { take, all, put, call } from 'typed-redux-saga';
 import ReconnectingWebSocket from 'reconnecting-websocket';
 import { eventChannel, EventChannel } from 'redux-saga';
 
-import { websocketNewPayload } from './actions';
+import { websocketPayload } from './actions';
+import { ChartData } from './types';
 
 function createSocketChannel(socket: ReconnectingWebSocket) {
-  return eventChannel((emitter) => {
+  return eventChannel((emitter: (input: ChartData) => void) => {
     socket.onopen = (evt: Event) => {
       console.log('WebSocket opened ', evt);
     };
 
     socket.onmessage = (evt: MessageEvent<any>) => {
-      const payload = JSON.parse(evt.data).data;
+      const payload = JSON.parse(evt.data).data as ChartData;
       return emitter(payload);
     };
 
@@ -32,7 +33,7 @@ function* watchSocketPings() {
   while (true) {
     try {
       const payload = yield* take(socketChannel);
-      yield put(websocketNewPayload(payload));
+      yield put(websocketPayload(payload));
     } catch (err) {
       console.error('socket error:', err);
       ws.close();
