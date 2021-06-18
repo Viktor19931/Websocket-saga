@@ -1,17 +1,16 @@
 import { FC } from 'react';
 
-import { useDrawChart } from './hooks';
 import { ChartWrapper } from './Wrapper';
 
-const Main: FC = () => {
-  const [chartContainerRef] = useDrawChart();
+import Chart from '../../components/Chart';
 
-  return (
-    <div>
-      <h2>Here is list from websocket</h2>
-      <ChartWrapper ref={chartContainerRef} />
-    </div>
-  );
-};
+const Main: FC = () => (
+  <div>
+    <h1>Here is chart from websocket</h1>
+    <ChartWrapper>
+      <Chart />
+    </ChartWrapper>
+  </div>
+);
 
 export default Main;

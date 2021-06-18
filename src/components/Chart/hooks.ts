@@ -1,65 +1,54 @@
-import { createChart, CrosshairMode, IChartApi } from 'lightweight-charts';
+import {
+  createChart,
+  CrosshairMode,
+  UTCTimestamp,
+  ISeriesApi,
+} from 'lightweight-charts';
 import { useSelector } from 'react-redux';
-import { selectors } from '../../store';
+import { selectors, ListData } from '../../store';
 
 import { useEffect, useRef } from 'react';
 
-export const useDrawChart = () => {
-  const list = useSelector(selectors.selectList);
-  const chartContainerRef = useRef<HTMLDivElement>(null);
-  const cc = useRef<IChartApi | null>();
+const CHART_OPTIONS = {
+  height: 500,
+  rightPriceScale: {
+    visible: true,
+    borderColor: 'rgba(197, 203, 206, 1)',
+  },
+  leftPriceScale: {
+    visible: true,
+    borderColor: 'rgba(197, 203, 206, 1)',
+  },
+  layout: {
+    backgroundColor: '#ffffff',
+    textColor: 'rgba(33, 56, 77, 1)',
+  },
+  grid: {
+    horzLines: {
+      color: '#F0F3FA',
+    },
+    vertLines: {
+      color: '#F0F3FA',
+    },
+  },
+  localization: {
+    locale: 'en-US',
+  },
+  crosshair: {
+    mode: CrosshairMode.Normal,
+  },
+  timeScale: {
+    timeVisible: true,
+    secondsVisible: true,
+    borderColor: 'rgba(197, 203, 206, 12)',
+  },
+  handleScroll: {
+    vertTouchDrag: false,
+  },
+};
 
-  useEffect(() => {
-    if (!chartContainerRef.current) return;
-
-    // remove old elements on redraw
-    chartContainerRef.current.firstChild?.remove();
-
-    const { clientWidth, clientHeight } = chartContainerRef.current;
-
-    const chart = createChart(chartContainerRef.current, {
-      width: clientWidth,
-      height: clientHeight,
-      rightPriceScale: {
-        visible: true,
-        borderColor: 'rgba(197, 203, 206, 1)',
-      },
-      leftPriceScale: {
-        visible: true,
-        borderColor: 'rgba(197, 203, 206, 1)',
-      },
-      layout: {
-        backgroundColor: '#ffffff',
-        textColor: 'rgba(33, 56, 77, 1)',
-      },
-      grid: {
-        horzLines: {
-          color: '#F0F3FA',
-        },
-        vertLines: {
-          color: '#F0F3FA',
-        },
-      },
-      localization: {
-        locale: 'en-US',
-      },
-      crosshair: {
-        mode: CrosshairMode.Normal,
-      },
-      timeScale: {
-        timeVisible: true,
-        secondsVisible: true,
-        borderColor: 'rgba(197, 203, 206, 12)',
-      },
-      handleScroll: {
-        vertTouchDrag: false,
-      }
-    });
-
-    cc.current = chart;
-  }, [chartContainerRef.current]);
-
-  const data = list?.map(({ close, high, low, open, time }) => {
+const getCandlesData = (list: ListData) =>
+  list?.map(({ close, high, low, open, time }) => {
     const newTime = new Date(time);
 
     return {
@@ -67,21 +56,67 @@ export const useDrawChart = () => {
       high,
       low,
       open,
-      time: newTime.getTime(),
+      time: newTime.getTime() as UTCTimestamp,
     };
   });
 
-  console.log(data);
+export const useDrawChart = () => {
+  const list = useSelector(selectors.selectList);
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const lineSeriesRef = useRef<ISeriesApi<'Line'>>();
+  const candlestickSeriesRef = useRef<ISeriesApi<'Candlestick'>>();
 
-  const candlestickSeries = (cc.current as IChartApi)?.addCandlestickSeries({
-    priceScaleId: 'right',
-    priceLineVisible: false,
-    lastValueVisible: false,
-  });
+  // create chart
+  useEffect(() => {
+    if (!chartContainerRef.current) return;
 
-  data && candlestickSeries && candlestickSeries.setData(data as any);
+    // remove old elements on redraw
+    chartContainerRef.current.firstChild?.remove();
 
-  return [chartContainerRef, data] as const;
+    const chart = createChart(chartContainerRef.current, CHART_OPTIONS);
+
+    const candlestickSeries = chart.addCandlestickSeries({
+      priceScaleId: 'right',
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+
+    const lineSeries = chart.addLineSeries({
+      color: 'rgba(4, 111, 232, 1)',
+      lineWidth: 2,
+    });
+
+    lineSeriesRef.current = lineSeries;
+    candlestickSeriesRef.current = candlestickSeries;
+  }, [chartContainerRef.current]);
+
+  const candlesData = getCandlesData(list);
+
+  // add candles data
+  useEffect(() => {
+    console.log(candlestickSeriesRef.current?.setData, candlesData);
+
+    if (candlestickSeriesRef.current && candlesData) {
+      candlestickSeriesRef.current.setData(candlesData);
+    }
+  }, [candlesData]);
+
+	// add line data
+  useEffect(() => {
+    if (lineSeriesRef.current) {
+      lineSeriesRef.current.setData([
+        { time: { year: 2021, month: 6, day: 18 }, value: 135.531816900940186 },
+        { time: { year: 2021, month: 6, day: 18 }, value: 136.350850429478125 },
+        { time: { year: 2021, month: 6, day: 18 }, value: 135.05218443850655 },
+        { time: { year: 2021, month: 6, day: 18 }, value: 135.41022485894306 },
+        { time: { year: 2021, month: 6, day: 18 }, value: 135.134847363259958 },
+        { time: { year: 2021, month: 6, day: 18 }, value: 134.239250761300525 },
+        { time: { year: 2021, month: 6, day: 18 }, value: 138.8673009313941 },
+      ]);
+    }
+  }, [lineSeriesRef.current]);
+
+  return [chartContainerRef] as const;
 };
 
 // chart

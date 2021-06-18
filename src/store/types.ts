@@ -13,8 +13,10 @@ export type ChartData = {
   ticker: string;
 };
 
+export type ListData = ChartData[] | null;
+
 export type ReducerData = {
-  list: ChartData[] | null;
+  list: ListData;
 };
 
 export type AppState = ReducerData;
