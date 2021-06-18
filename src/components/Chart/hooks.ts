@@ -38,8 +38,9 @@ const CHART_OPTIONS = {
     mode: CrosshairMode.Normal,
   },
   timeScale: {
+    visible: true,
     timeVisible: true,
-    secondsVisible: true,
+    secondsVisible: false,
     borderColor: 'rgba(197, 203, 206, 12)',
   },
   handleScroll: {
@@ -49,14 +50,19 @@ const CHART_OPTIONS = {
 
 const getCandlesData = (list: ListData) =>
   list?.map(({ close, high, low, open, time }) => {
-    const newTime = new Date(time);
+    const offset = new Date().getTimezoneOffset();
+    const t = offset * 60;
+    const newTime = +(
+      new Date(time).getTime() / 1000 -
+      t
+    ).toFixed() as UTCTimestamp;
 
     return {
       close,
       high,
       low,
       open,
-      time: newTime.getTime() as UTCTimestamp,
+      time: newTime,
     };
   });
 
@@ -64,7 +70,7 @@ export const useDrawChart = () => {
   const list = useSelector(selectors.selectList);
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const lineSeriesRef = useRef<ISeriesApi<'Line'>>();
-  const candlestickSeriesRef = useRef<ISeriesApi<'Candlestick'>>();
+  const candleSeriesRef = useRef<ISeriesApi<'Candlestick'>>();
 
   // create chart
   useEffect(() => {
@@ -75,10 +81,10 @@ export const useDrawChart = () => {
 
     const chart = createChart(chartContainerRef.current, CHART_OPTIONS);
 
-    const candlestickSeries = chart.addCandlestickSeries({
+    const candleSeries = chart.addCandlestickSeries({
       priceScaleId: 'right',
-      priceLineVisible: false,
-      lastValueVisible: false,
+      // priceLineVisible: false,
+      // lastValueVisible: false,
     });
 
     const lineSeries = chart.addLineSeries({
@@ -86,22 +92,23 @@ export const useDrawChart = () => {
       lineWidth: 2,
     });
 
+    chart.timeScale().fitContent();
+
     lineSeriesRef.current = lineSeries;
-    candlestickSeriesRef.current = candlestickSeries;
+    candleSeriesRef.current = candleSeries;
   }, [chartContainerRef.current]);
 
   const candlesData = getCandlesData(list);
 
   // add candles data
   useEffect(() => {
-    console.log(candlestickSeriesRef.current?.setData, candlesData);
-
-    if (candlestickSeriesRef.current && candlesData) {
-      candlestickSeriesRef.current.setData(candlesData);
+    if (candleSeriesRef.current && candlesData) {
+      // candleSeriesRef.current.setData(candlesData);
+      candleSeriesRef.current.update(candlesData[candlesData.length - 1]);
     }
   }, [candlesData]);
 
-	// add line data
+  // add line data
   useEffect(() => {
     if (lineSeriesRef.current) {
       lineSeriesRef.current.setData([
