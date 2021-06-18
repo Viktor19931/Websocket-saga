@@ -5,7 +5,7 @@ import * as actions from './actions';
 import { Actions, ReducerData } from './types';
 
 const initialState = {
-  list: ['1', '2'],
+  list: null,
   isError: false,
   isPending: false,
 };
@@ -16,10 +16,11 @@ const reducer: Reducer<ReducerData, Actions> = (
 ) => {
   switch (action.type) {
     case getType(actions.websocketNewPayload):
-      const newList = [...state.list];
-      newList.push(action.payload);
+      const oldBars = state.list || [];
+      const newBars = [...oldBars];
+      newBars.push(action.payload);
 
-      return { ...state, list: newList };
+      return { ...state, list: newBars };
     default:
       return state;
   }
